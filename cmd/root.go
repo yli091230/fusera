@@ -16,25 +16,25 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/mattrbianchi/twig"
 	"github.com/mitre/fusera/flags"
-	"github.com/mitre/fusera/info"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var (
-	debug bool
+	debug   bool
+	verbose bool
+	silent  bool
 )
 
 func init() {
-	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "Enable debug output. Mostly for developers.")
-	if err := viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug")); err != nil {
-		panic("INTERNAL ERROR: could not bind debug flag to debug environment variable")
-	}
+	// rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "Enable debug output.")
+	// if err := viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug")); err != nil {
+	// 	panic("INTERNAL ERROR: could not bind debug flag to debug environment variable")
+	// }
 
 	rootCmd.PersistentFlags().BoolVarP(&flags.Silent, "silent", "s", false, flags.SilentMsg)
 	if err := viper.BindPFlag("silent", mountCmd.Flags().Lookup("silent")); err != nil {
@@ -48,23 +48,18 @@ func init() {
 
 	viper.SetEnvPrefix(flags.EnvPrefix)
 	viper.AutomaticEnv()
-	info.BinaryName = "fusera"
 }
 
 var rootCmd = &cobra.Command{
-	Use:     info.BinaryName,
-	Short:   "A FUSE interface to the NCBI Sequence Read Archive (SRA) - " + info.Version,
+	Use:     "fusera",
+	Short:   "A FUSE interface to the NCBI Sequence Read Archive (SRA) - " + flags.Version,
 	Long:    ``,
-	Version: info.Version,
+	Version: flags.Version,
 }
 
 // Execute runs the main command of fusera, which has no action of its own,
 // so it evaluates which subcommand should be executed.
 func Execute() {
-	if os.Geteuid() == 0 {
-		fmt.Println("Running Fusera as root is not supported. This causes problems with mounting the filesystem using FUSE.")
-		os.Exit(1)
-	}
 	if err := rootCmd.Execute(); err != nil {
 		prettyPrintError(err)
 		os.Exit(1)
